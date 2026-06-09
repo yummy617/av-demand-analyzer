@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音视频需求拆解&技术可行性初判助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e4e4e7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(180deg, #60a5fa, #a78bfa);
+            border-radius: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .requirement-input {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 14px;
+            color: #e4e4e7;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .requirement-input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+        }
+
+        .requirement-input::placeholder {
+            color: #64748b;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .radio-item {
+            position: relative;
+        }
+
+        .radio-item input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .radio-item label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .radio-item input:checked + label {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+        }
+
+        .radio-item label:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        .radio-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .radio-item input:checked + label .radio-icon {
+            border-color: #60a5fa;
+        }
+
+        .radio-item input:checked + label .radio-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: #60a5fa;
+            border-radius: 50%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e4e4e7;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .result-card {
+            grid-column: 1 / -1;
+        }
+
+        .result-container {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 300px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .result-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .result-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .result-section {
+            margin-bottom: 24px;
+        }
+
+        .result-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .keyword-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border-radius: 4px;
+            font-size: 13px;
+            margin: 4px;
+        }
+
+        .priority-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 4px;
+        }
+
+        .priority-p0 {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .priority-p1 {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .priority-p2 {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .module-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .module-item {
+            padding: 8px 16px;
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+        }
+
+        .feasibility-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .feasibility-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feasibility-item:last-child {
+            border-bottom: none;
+        }
+
+        .feasibility-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .status-high {
+            color: #4ade80;
+        }
+
+        .status-medium {
+            color: #fbbf24;
+        }
+
+        .status-low {
+            color: #f87171;
+        }
+
+        .status-icon {
+            font-size: 16px;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            margin-top: 16px;
+        }
+
+        .summary-title {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .summary-content {
+            font-size: 15px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            color: #e4e4e7;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            background: rgba(34, 197, 94, 0.9);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .main-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 音视频需求拆解 & 技术可行性初判助手</h1>
+            <p>基于直播 & 可灵AI关键词规则库，自动拆解需求、匹配技术模块、评估可行性</p>
+        </div>
+
+        <div class="main-panel">
+            <div class="card">
+                <div class="card-title">需求输入</div>
+                <div class="input-group">
+                    <label>请输入需求描述</label>
+                    <textarea class="requirement-input" id="requirementInput" placeholder="示例：需要在直播间实现虚拟背景替换功能，支持主播自定义上传背景图，并能实时预览效果。同时需要支持美颜滤镜，包括瘦脸、大眼、美白等功能，延迟要求在200ms以内..."></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">业务线选择</div>
+                <div class="input-group">
+                    <label>选择目标业务线</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="business" id="live" value="live" checked>
+                            <label for="live">
+                                <span class="radio-icon"></span>
+                                📺 直播业务
+                            </label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="business" id="kling" value="kling">
+                            <label for="kling">
+                                <span class="radio-icon"></span>
+                                🤖 可灵AI
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">
+                        <span>🔍</span> 开始分析
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn" onclick="clearAll()">
+                        <span>🗑️</span> 清空
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card result-card">
+            <div class="card-title">
+                分析结果
+                <span class="info-badge" id="analysisTime"></span>
+            </div>
+            <div class="result-container" id="resultContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div>请输入需求并点击「开始分析」按钮</div>
+                </div>
+            </div>
+            <div class="btn-group" style="margin-top: 16px;">
+                <button class="btn btn-secondary" id="copyBtn" onclick="copyReport()" disabled>
+                    <span>📋</span> 一键复制报告
+                </button>
+                <button class="btn btn-secondary" id="exportBtn" onclick="exportReport()" disabled>
+                    <span>💾</span> 导出报告
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">✓ 已复制到剪贴板</div>
+
+    <script>
+        // ====== 关键词规则库 ======
+        const RULES_DATABASE = {
+            live: {
+                name: '直播业务',
+                categories: {
+                    '推拉流': {
+                        keywords: ['推流', '拉流', 'RTMP', 'FLV', 'HLS', 'WebRTC', '低延迟', '延迟', '推流端', '播放端', '流媒体', 'CDN'],
+                        modules: ['推流SDK', '播放器SDK', 'CDN加速', '转码服务', '流媒体服务器'],
+                        feasibility: 'high',
+                        priority: 'P0',
+                        notes: '核心功能，技术成熟度高'
+                    },
+                    '音视频采集': {
+                        keywords: ['摄像头', '麦克风', '屏幕共享', '采集', '录屏', '设备', '音视频源', '采集卡'],
+                        modules: ['设备管理模块', '音视频采集模块', '权限管理'],
+                        feasibility: 'high',
+                        priority: 'P0',
+                        notes: '基础能力，需处理设备兼容性'
+                    },
+                    '编码解码': {
+                        keywords: ['编码', '解码', 'H.264', 'H.265', 'VP8', 'VP9', 'AAC', 'Opus', '码率', '压缩', '硬编', '软编'],
+                        modules: ['编解码模块', '硬件加速', '自适应码率'],
+                        feasibility: 'high',
+                        priority: 'P0',
+                        notes: '核心能力，需考虑性能优化'
+                    },
+                    '美颜滤镜': {
+                        keywords: ['美颜', '滤镜', '瘦脸', '大眼', '美白', '磨皮', '特效', '贴纸', 'AR', '美妆'],
+                        modules: ['美颜SDK', '滤镜引擎', 'AR渲染模块', '人脸检测'],
+                        feasibility: 'high',
+                        priority: 'P1',
+                        notes: '需考虑性能和效果平衡'
+                    },
+                    '虚拟背景': {
+                        keywords: ['虚拟背景', '背景替换', '绿幕', '抠图', '人像分割', '背景模糊', 'AI背景'],
+                        modules: ['背景分割模型', '渲染引擎', '背景管理模块'],
+                        feasibility: 'medium',
+                        priority: 'P1',
+                        notes: '依赖AI模型，需考虑低端机适配'
+                    },
+                    '连麦PK': {
+                        keywords: ['连麦', 'PK', '多人', '互动', '合流', '混流', '嘉宾', '观众连麦'],
+                        modules: ['连麦SDK', '合流模块', '房间管理', '状态同步'],
+                        feasibility: 'medium',
+                        priority: 'P1',
+                        notes: '复杂度高，需考虑弱网场景'
+                    },
+                    '礼物动画': {
+                        keywords: ['礼物', '动画', '特效', '飘屏', '全屏礼物', '连击', '动效'],
+                        modules: ['动画引擎', '礼物管理', '粒子系统'],
+                        feasibility: 'high',
+                        priority: 'P2',
+                        notes: '技术成熟，重点在体验优化'
+                    },
+                    '弹幕评论': {
+                        keywords: ['弹幕', '评论', '聊天', '消息', '互动', '点赞', '飘屏'],
+                        modules: ['IM模块', '弹幕渲染', '消息存储'],
+                        feasibility: 'high',
+                        priority: 'P1',
+                        notes: '需考虑高并发和消息可靠性'
+                    },
+                    '录制回放': {
+                        keywords: ['录制', '回放', '回看', '时移', '存储', '点播', '录播'],
+                        modules: ['录制模块', '存储服务', '转码服务', '点播系统'],
+                        feasibility: 'high',
+                        priority: 'P2',
+                        notes: '存储成本需评估'
+                    },
+                    '质量监控': {
+                        keywords: ['监控', '质量', '卡顿', '首帧', '延迟', 'QoS', 'QoE', '质量优化', '弱网', '抗性'],
+                        modules: ['质量监控SDK', '数据分析平台', '告警系统'],
+                        feasibility: 'high',
+                        priority: 'P1',
+                        notes: '核心能力，需建立监控体系'
+                    }
+                }
+            },
+            kling: {
+                name: '可灵AI',
+                categories: {
+                    '视频生成': {
+                        keywords: ['生成', '文生视频', '图生视频', 'AI视频', '视频创作', '生成时长', '生成速度', '生成质量'],
+                        modules: ['视频生成模型', '提示词理解', '视频渲染引擎'],
+                        feasibility: 'high',
+                        priority: 'P0',
+                        notes: '核心能力，需优化生成效果和速度'
+                    },
+                    '图像生成': {
+                        keywords: ['文生图', '图生图', '图像生成', 'AI绘画', '图片生成', '画质', '风格'],
+                        modules: ['图像生成模型', '风格迁移', '图像后处理'],
+                        feasibility: 'high',
+                        priority: 'P0',
+                        notes: '基础能力，需丰富风格库'
+                    },
+                    '视频编辑': {
+                        keywords: ['编辑', '剪辑', '裁剪', '合并', '转场', '字幕', '配音', 'BGM', '模板'],
+                        modules: ['编辑SDK', '时间线管理', '模板系统', '字幕生成'],
+                        feasibility: 'high',
+                        priority: 'P1',
+                        notes: '技术成熟，重点在用户体验'
+                    },
+                    'AI换脸': {
+                        keywords: ['换脸', '人脸替换', 'Face Swap', '表情迁移', '人脸融合'],
+                        modules: ['人脸检测', '人脸对齐', '换脸模型', '渲染模块'],
+                        feasibility: 'medium',
+                        priority: 'P1',
+                        notes: '需考虑合规和伦理问题'
+                    },
+                    '数字人': {
+                        keywords: ['数字人', '虚拟人', '虚拟主播', '口播', '播报', '驱动', '唇形同步'],
+                        modules: ['数字人模型', '语音合成', '唇形驱动', '动作捕捉'],
+                        feasibility: 'medium',
+                        priority: 'P1',
+                        notes: '复杂度高，需优化自然度'
+                    },
+                    '智能配音': {
+                        keywords: ['配音', 'TTS', '语音合成', '克隆', '声音', '音色', '朗读'],
+                        modules: ['TTS引擎', '声音克隆', '情感合成', '多语言支持'],
+                        feasibility: 'high',
+                        priority: 'P1',
+                        notes: '技术成熟，重点在声音质量'
+                    },
+                    '智能字幕': {
+                        keywords: ['字幕', 'ASR', '语音识别', '翻译', '多语言', '实时字幕', '转录'],
+                        modules: ['ASR引擎', '翻译模块', '字幕渲染', '时间对齐'],
+                        feasibility: 'high',
+                        priority: 'P1',
+                        notes: '准确率是关键指标'
+                    },
+                    '视频理解': {
+                        keywords: ['理解', '分析', '识别', '检测', '分类', '标签', '审核', '内容分析'],
+                        modules: ['视频理解模型', '标签系统', '内容审核', '智能分析'],
+                        feasibility: 'high',
+                        priority: 'P2',
+                        notes: '支持多种分析维度'
+                    },
+                    '风格化': {
+                        keywords: ['风格', '滤镜', '动漫化', '漫画', '艺术', '风格迁移', '卡通'],
+                        modules: ['风格迁移模型', '滤镜引擎', '自定义风格'],
+                        feasibility: 'high',
+                        priority: 'P2',
+                        notes: '需丰富风格类型'
+                    },
+                    '超分增强': {
+                        keywords: ['超分', '增强', '画质提升', '高清', '修复', '去噪', '去模糊'],
+                        modules: ['超分模型', '修复模块', '降噪算法'],
+                        feasibility: 'medium',
+                        priority: 'P2',
+                        notes: '需平衡效果和性能'
+                    }
+                }
+            }
+        };
+
+        // ====== 分析逻辑 ======
+        let currentResult = null;
+
+        function analyze() {
+            const requirement = document.getElementById('requirementInput').value.trim();
+            const business = document.querySelector('input[name="business"]:checked').value;
+            
+            if (!requirement) {
+                showToast('请输入需求描述');
+                return;
+            }
+
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `
+                <div class="loading show">
+                    <div class="spinner"></div>
+                    <span>正在分析需求...</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                currentResult = performAnalysis(requirement, business);
+                renderResult(currentResult);
+                updateButtons(true);
+            }, 800);
+        }
+
+        function performAnalysis(requirement, business) {
+            const rules = RULES_DATABASE[business];
+            const results = {
+                business: rules.name,
+                timestamp: new Date().toLocaleString('zh-CN'),
+                matchedCategories: [],
+                allKeywords: [],
+                allModules: [],
+                priorities: { P0: [], P1: [], P2: [] },
+                feasibility: { high: [], medium: [], low: [] },
+                summary: ''
+            };
+
+            // 匹配关键词
+            for (const [category, data] of Object.entries(rules.categories)) {
+                const matchedKeywords = data.keywords.filter(kw => 
+                    requirement.toLowerCase().includes(kw.toLowerCase())
+                );
+
+                if (matchedKeywords.length > 0) {
+                    results.matchedCategories.push({
+                        name: category,
+                        keywords: matchedKeywords,
+                        modules: data.modules,
+                        feasibility: data.feasibility,
+                        priority: data.priority,
+                        notes: data.notes
+                    });
+
+                    results.allKeywords.push(...matchedKeywords);
+                    results.allModules.push(...data.modules);
+                    results.priorities[data.priority].push(category);
+                    results.feasibility[data.feasibility].push(category);
+                }
+            }
+
+            // 去重
+            results.allKeywords = [...new Set(results.allKeywords)];
+            results.allModules = [...new Set(results.allModules)];
+
+            // 生成总结
+            results.summary = generateSummary(requirement, results, business);
+
+            return results;
+        }
+
+        function generateSummary(requirement, results, business) {
+            const lines = [];
+            
+            lines.push(`【需求分析报告】`);
+            lines.push(`业务线：${results.business}`);
+            lines.push(`分析时间：${results.timestamp}`);
+            lines.push('');
+            lines.push(`【识别关键词】`);
+            lines.push(results.allKeywords.length > 0 ? results.allKeywords.join('、') : '未识别到关键词');
+            lines.push('');
+            lines.push(`【匹配功能模块】`);
+            lines.push(results.matchedCategories.map(c => `${c.name}(${c.priority})`).join('、') || '未匹配到模块');
+            lines.push('');
+            lines.push(`【优先级评估】`);
+            lines.push(`P0(核心)：${results.priorities.P0.join('、') || '无'}`);
+            lines.push(`P1(重要)：${results.priorities.P1.join('、') || '无'}`);
+            lines.push(`P2(一般)：${results.priorities.P2.join('、') || '无'}`);
+            lines.push('');
+            lines.push(`【可行性判断】`);
+            lines.push(`高可行性：${results.feasibility.high.join('、') || '无'}`);
+            lines.push(`中可行性：${results.feasibility.medium.join('、') || '无'}`);
+            lines.push(`低可行性：${results.feasibility.low.join('、') || '无'}`);
+            lines.push('');
+            lines.push(`【技术模块清单】`);
+            results.allModules.forEach((m, i) => lines.push(`${i + 1}. ${m}`));
+            lines.push('');
+            lines.push(`【风险提示】`);
+            
+            if (results.feasibility.medium.length > 0) {
+                lines.push(`⚠️ ${results.feasibility.medium.join('、')}模块可行性为中等，需进一步评估技术方案和性能影响。`);
+            }
+            if (results.feasibility.low.length > 0) {
+                lines.push(`🔴 ${results.feasibility.low.join('、')}模块可行性较低，建议提前进行技术预研或调整需求方案。`);
+            }
+            if (results.feasibility.medium.length === 0 && results.feasibility.low.length === 0) {
+                lines.push(`✅ 整体可行性高，技术方案成熟。`);
+            }
+            lines.push('');
+            lines.push(`【建议】`);
+            if (results.matchedCategories.length === 0) {
+                lines.push('未匹配到已知功能模块，建议：');
+                lines.push('1. 检查需求描述是否清晰完整');
+                lines.push('2. 确认是否属于当前业务线范围');
+                lines.push('3. 联系技术团队进行人工评估');
+            } else {
+                lines.push('1. 优先处理P0级核心功能');
+                lines.push('2. 对中等可行性模块进行技术预研');
+                lines.push('3. 制定详细的技术方案和排期');
+                lines.push('4. 建立质量监控和验收标准');
+            }
+
+            return lines.join('\n');
+        }
+
+        function renderResult(result) {
+            const container = document.getElementById('resultContainer');
+            document.getElementById('analysisTime').textContent = result.timestamp;
+
+            if (result.matchedCategories.length === 0) {
+                container.innerHTML = `
+                    <div class="result-section">
+                        <div class="result-section-title">📌 匹配结果</div>
+                        <p style="color: #fbbf24;">未匹配到已知功能模块，请检查需求描述或联系技术团队进行人工评估。</p>
+                    </div>
+                    <div class="summary-box">
+                        <div class="summary-title">完整报告</div>
+                        <div class="summary-content">${result.summary}</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="result-section">
+                    <div class="result-section-title">📌 识别关键词 (${result.allKeywords.length}个)</div>
+                    <div>${result.allKeywords.map(k => `<span class="keyword-tag">${k}</span>`).join('')}</div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-section-title">🔧 匹配功能模块 (${result.matchedCategories.length}个)</div>
+                    <div class="module-list">
+                        ${result.matchedCategories.map(c => `
+                            <span class="module-item" title="${c.notes}">${c.name} <span class="priority-tag priority-${c.priority.toLowerCase()}">${c.priority}</span></span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-section-title">📊 优先级分布</div>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div>
+                            <span class="priority-tag priority-p0">P0 核心</span>
+                            <span style="color: #94a3b8;">${result.priorities.P0.join('、') || '无'}</span>
+                        </div>
+                        <div>
+                            <span class="priority-tag priority-p1">P1 重要</span>
+                            <span style="color: #94a3b8;">${result.priorities.P1.join('、') || '无'}</span>
+                        </div>
+                        <div>
+                            <span class="priority-tag priority-p2">P2 一般</span>
+                            <span style="color: #94a3b8;">${result.priorities.P2.join('、') || '无'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-section-title">✅ 可行性评估</div>
+                    <div class="feasibility-section">
+                        <div class="feasibility-item">
+                            <span>高可行性</span>
+                            <span class="feasibility-status status-high">
+                                <span class="status-icon">●</span> ${result.feasibility.high.length} 项
+                            </span>
+                        </div>
+                        <div class="feasibility-item">
+                            <span>中等可行性</span>
+                            <span class="feasibility-status status-medium">
+                                <span class="status-icon">●</span> ${result.feasibility.medium.length} 项
+                            </span>
+                        </div>
+                        <div class="feasibility-item">
+                            <span>低可行性</span>
+                            <span class="feasibility-status status-low">
+                                <span class="status-icon">●</span> ${result.feasibility.low.length} 项
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-section-title">📋 技术模块清单 (${result.allModules.length}个)</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                        ${result.allModules.map((m, i) => `<div style="padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 13px;">${i + 1}. ${m}</div>`).join('')}
+                    </div>
+                </div>
+
+                <div class="summary-box">
+                    <div class="summary-title">📄 完整分析报告</div>
+                    <div class="summary-content">${result.summary}</div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function updateButtons(hasResult) {
+            document.getElementById('copyBtn').disabled = !hasResult;
+            document.getElementById('exportBtn').disabled = !hasResult;
+        }
+
+        function copyReport() {
+            if (!currentResult) return;
+            
+            navigator.clipboard.writeText(currentResult.summary).then(() => {
+                showToast('已复制到剪贴板');
+            }).catch(() => {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = currentResult.summary;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('已复制到剪贴板');
+            });
+        }
+
+        function exportReport() {
+            if (!currentResult) return;
+            
+            const blob = new Blob([currentResult.summary], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `需求分析报告_${currentResult.timestamp.replace(/[/:]/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('报告已导出');
+        }
+
+        function clearAll() {
+            document.getElementById('requirementInput').value = '';
+            document.getElementById('resultContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div>请输入需求并点击「开始分析」按钮</div>
+                </div>
+            `;
+            document.getElementById('analysisTime').textContent = '';
+            currentResult = null;
+            updateButtons(false);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = '✓ ' + message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 回车快捷键
+        document.getElementById('requirementInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                analyze();
+            }
+        });
+    </script>
+</body>
+</html>
